@@ -11,4 +11,4 @@ You'll have to replace it in:
 * `package.json`, `update:list`
 * `list.js`
 
-Run it with: `npm run update && npm start` and maybe it will work.
+Run it with: `npm run update && npm run build && npm start` and maybe it will work.
