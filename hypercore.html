@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Dat World</title>
+<meta charset="utf-8">
+
+<link rel="stylesheet" href="/bundle.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<div id="choo-root" class="minidocs">
+    <div class="_68ad6959 minidocs-sidebar">
+    <div class="minidocs-header">
+      <h1><a href="/"><img src="/dat-data-logo.svg" alt="Dat World" class="minidocs-logo" /></a></h1>
+    </div>
+    <div class="_df8df972 minidocs-contents">
+    <button class="minidocs-menu-toggle">Menu</button>
+    <div class="minidocs-menu menu-closed menu-small">
+      <div class="minidocs-menu-wrapper">
+        <div class="h1">Welcome</div><div><a href="/awesome-dat" class="content-link ">Awesome Dat</a></div><div class="h1">For the users</div><div><a href="/dat" class="content-link ">maxogden/dat</a></div><div><a href="/dat-desktop" class="content-link ">juliangruber/dat-desktop</a></div><div class="h1">Protocol &amp; Network</div><div><a href="/docs" class="content-link ">datproject/docs</a></div><div><a href="/hypercore" class="content-link active">mafintosh/hypercore</a></div><div><a href="/hypercore-protocol" class="content-link ">mafintosh/hypercore-protocol</a></div><div><a href="/hyperdrive" class="content-link ">mafintosh/hyperdrive</a></div><div><a href="/hyperdrive-archive-swarm" class="content-link ">karissa/hyperdrive-archive-swarm</a></div><div><a href="/hyperdrive-ui" class="content-link ">karissa/hyperdrive-ui</a></div><div class="h1">Infrastructure</div><div><a href="/website" class="content-link ">datproject/website</a></div><div class="h1">Built with dat</div><div><a href="/jawn" class="content-link ">CfABrigadePhiladelphia/jawn</a></div>
+      </div>
+    </div>
+  </div>
+  </div>
+    <div class="_6781b8a1 minidocs-main">
+      <div class="markdown-body">
+        <div class="_d706bf45 minidocs-content">
+    
+    
+    <div><h1 id="hypercore">hypercore</h1>
+<p>Hypercore is a protocol and p2p network for distributing and replicating feeds of binary data. It is the low level component that <a href="https://github.com/mafintosh/hyperdrive">Hyperdrive</a> is built on top of.</p>
+<pre><code>npm <span class="hljs-keyword">install</span> hypercore
+</code></pre><p><a href="http://travis-ci.org/mafintosh/hypercore"><img src="http://img.shields.io/travis/mafintosh/hypercore.svg?style=flat" alt="build status"></a></p>
+<p>It runs both in the node and in the browser using <a href="https://github.com/substack/node-browserify">browserify</a>.</p>
+<h2 id="usage">Usage</h2>
+<pre><code class="lang-js"><span class="hljs-keyword">var</span> hypercore = <span class="hljs-built_in">require</span>(<span class="hljs-string">'hypercore'</span>)
+<span class="hljs-keyword">var</span> net = <span class="hljs-built_in">require</span>(<span class="hljs-string">'net'</span>)
+
+<span class="hljs-keyword">var</span> core = hypercore(db) <span class="hljs-comment">// db is a leveldb instance</span>
+<span class="hljs-keyword">var</span> feed = core.createFeed()
+
+feed.append([<span class="hljs-string">'hello'</span>, <span class="hljs-string">'world'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'appended two blocks'</span>)
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'key is'</span>, feed.key.toString(<span class="hljs-string">'hex'</span>))
+})
+
+feed.on(<span class="hljs-string">'upload'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">block, data</span>) </span>{
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'uploaded block'</span>, block, data)
+})
+
+<span class="hljs-keyword">var</span> server = net.createServer(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">socket</span>) </span>{
+  socket.pipe(feed.replicate()).pipe(socket)
+})
+
+server.listen(<span class="hljs-number">10000</span>)
+</code></pre>
+<p>In another process</p>
+<pre><code class="lang-js"><span class="hljs-keyword">var</span> core = hypercore(anotherDb)
+<span class="hljs-keyword">var</span> feed = core.createFeed(<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">key-printed-out-above</span>&gt;</span>)
+var socket = net.connect(10000)
+
+socket.pipe(feed.replicate()).pipe(socket)
+
+feed.on('download', function (block, data) {
+  console.log('downloaded block', block, data)
+})</span>
+</code></pre>
+<h2 id="api">API</h2>
+<h4 id="-var-core-hypercore-db-"><code>var core = hypercore(db)</code></h4>
+<p>Create a new hypercore instance. <code>db</code> should be a leveldb instance.</p>
+<h4 id="-var-feed-core-createfeed-key-options-"><code>var feed = core.createFeed([key], [options])</code></h4>
+<p>Create a new feed. A feed stores a list of append-only data (buffers). A feed has a <code>.key</code> property that you can pass in to <code>createFeed</code> if you want to retrieve an old feed. Per default all feeds are appendable (live).</p>
+<p>Options include:</p>
+<pre><code class="lang-js">{
+  live: <span class="hljs-literal">true</span>,
+  storage: externalStorage,
+  sparse: <span class="hljs-literal">false</span>
+}
+</code></pre>
+<p>Set <code>sparse</code> to <code>true</code> if you only want to download the pieces of the feed you are requesting / prioritizing. Otherwise the entire feed will be downloaded if nothing else is prioritized.</p>
+<p>If you want to create a static feed, one you cannot reappend data to, pass the <code>{live: false}</code> option.
+The storage option allows you to store data outside of leveldb. This is very useful if you use hypercore to distribute files.</p>
+<p>See the <a href="#storage-api">Storage API</a> section for more info</p>
+<h4 id="-var-stream-core-replicate-opts-"><code>var stream = core.replicate(opts)</code></h4>
+<p>Create a generic replication stream. Use the <code>feed.replicate(stream)</code> API described below to replicate specific feeds of data.
+Options include:</p>
+<pre><code class="lang-js">{
+  upload: <span class="hljs-literal">true</span>, <span class="hljs-comment">// upload data to other peer</span>
+  download: <span class="hljs-literal">true</span> <span class="hljs-comment">// download data from other peer</span>
+}
+</code></pre>
+<h4 id="-var-stream-core-list-options-callback-"><code>var stream = core.list([options], [callback])</code></h4>
+<p>List all feed keys in the database. Optionally you can pass a callback to buffer them into an array. Options include:</p>
+<pre><code class="lang-js">{
+  values: <span class="hljs-literal">false</span> <span class="hljs-comment">// set this to get feed attributes, not just feed keys</span>
+}
+</code></pre>
+<h2 id="-feed-api-"><code>Feed API</code></h2>
+<p>As mentioned above a feed stores a list of data for you that you can replicate to other peers. It has the following API</p>
+<h4 id="-feed-key-"><code>feed.key</code></h4>
+<p>The key of this feed. A 32 byte buffer. Other peers need this key to start replicating the feed.</p>
+<h4 id="-feed-discoverykey-"><code>feed.discoveryKey</code></h4>
+<p>A 32 byte buffer containing a discovery key of the feed. The discovery key is sha-256 hmac of the string <code>hypercore</code> using the feed key as the password.
+You can use the discovery key to find other peers sharing this feed without disclosing your feed key to a third party.</p>
+<h4 id="-feed-blocks-"><code>feed.blocks</code></h4>
+<p>The total number of known data blocks in the feed.</p>
+<h4 id="-feed-bytes-"><code>feed.bytes</code></h4>
+<p>The total byte size of known data blocks in the feed.</p>
+<h4 id="-feed-open-cb-"><code>feed.open(cb)</code></h4>
+<p>Call this method to ensure that a feed is opened. You do not need to call this but the <code>.blocks</code> property will not be populated until the feed has been opened.</p>
+<h4 id="-feed-append-data-callback-"><code>feed.append(data, callback)</code></h4>
+<p>Append a block of data to the feed. If you want to append more than one block you can pass in an array.</p>
+<h4 id="-feed-get-index-callback-"><code>feed.get(index, callback)</code></h4>
+<p>Retrieve a block of data from the feed.</p>
+<h4 id="-feed-prioritize-range-callback-"><code>feed.prioritize(range, [callback])</code></h4>
+<p>Prioritize a range of blocks to download. Will call the callback when done.
+Range should look like this</p>
+<pre><code class="lang-js">{
+  start: startBlock,
+  end: optionalEndBlock,
+  priority: <span class="hljs-number">2</span> <span class="hljs-comment">// a priority level spanning [0-5]</span>
+  linear: <span class="hljs-literal">false</span> <span class="hljs-comment">// download the range linearly</span>
+}
+</code></pre>
+<h4 id="-feed-unprioritize-range-"><code>feed.unprioritize(range)</code></h4>
+<p>Unprioritize a range.</p>
+<h4 id="-feed-seek-byteoffset-callback-"><code>feed.seek(byteOffset, callback)</code></h4>
+<p>Find the block of data containing the byte offset. Calls the callback with <code>(err, index, offset)</code> where <code>index</code> is the block index and <code>offset</code> is the the relative byte offset in the block returned by <code>.get(index)</code>.</p>
+<h4 id="-feed-finalize-callback-"><code>feed.finalize(callback)</code></h4>
+<p>If you are not using a live feed you need to call this method to finalize the feed once you are ready to share it.
+Finalizing will set the <code>.key</code> property and allow other peers to get your data.</p>
+<h4 id="-var-stream-feed-createwritestream-options-"><code>var stream = feed.createWriteStream([options])</code></h4>
+<p>Create a writable stream that appends to the feed. If the feed is a static feed, it will be finalized when you end the stream.</p>
+<h4 id="-var-stream-feed-createreadstream-options-"><code>var stream = feed.createReadStream([options])</code></h4>
+<p>Create a readable stream that reads from the feed. Options include:</p>
+<pre><code class="lang-js">{
+  start: startIndex, <span class="hljs-comment">// read from this index</span>
+  end: endIndex, <span class="hljs-comment">// read until this index</span>
+  live: <span class="hljs-literal">false</span> <span class="hljs-comment">// set this to keep the read stream open</span>
+}
+</code></pre>
+<h4 id="-var-stream-feed-replicate-options-"><code>var stream = feed.replicate([options])</code></h4>
+<p>Get a replication stream for this feed. Pipe this to another peer to start replicating this feed with another peer.
+If you create multiple replication streams to multiple peers you&#39;ll upload/download data to all of them (meaning the load will spread out).</p>
+<p>Per default the replication stream encrypts all messages sent using the feed key and an incrementing nonce. This helps ensures that the remote peer also the feed key and makes it harder for a man-in-the-middle to sniff the data you are sending.</p>
+<p>Set <code>{private: false}</code> to disable this.</p>
+<p>Hypercore uses a simple multiplexed protocol that allows one replication stream to be used for multiple feeds at once.
+If you want to join another replication stream simply pass it as the stream option</p>
+<pre><code class="lang-js">feed.replicate({stream: anotherReplicationStream})
+</code></pre>
+<p>As a shorthand you can also do <code>feed.replicate(stream)</code>.</p>
+<h4 id="-stream-on-open-discoverykey-"><code>stream.on(&#39;open&#39;, discoveryKey)</code></h4>
+<p>Emitted when a remote feed joins the replication stream and you haven&#39;t. You can use this as a signal to join the stream yourself if you want to.</p>
+<h4 id="-feed-on-download-block-data-"><code>feed.on(&#39;download&#39;, block, data)</code></h4>
+<p>Emitted when a data block has been downloaded</p>
+<h4 id="-feed-on-download-finished-"><code>feed.on(&#39;download-finished&#39;)</code></h4>
+<p>Emitted when all available data has been downloaded.
+Will re-fire when a live feed is updated and you download all the new blocks.</p>
+<h4 id="-feed-on-upload-block-data-"><code>feed.on(&#39;upload&#39;, block, data)</code></h4>
+<p>Emitted when a data block has been uploaded</p>
+<h2 id="storage-api">Storage API</h2>
+<p>If you want to use external storage to store the hypercore data (metadata will still be stored in the leveldb) you need to implement the following api and provide that as the <code>storage</code> option when creating a feed.</p>
+<p>Some node modules that implement this interface are</p>
+<ul>
+<li><a href="https://github.com/mafintosh/random-access-file">random-access-file</a> Writes data to a file.</li>
+<li><a href="https://github.com/mafintosh/random-access-memory">random-access-memory</a> Writes data to memory.</li>
+</ul>
+<h4 id="-storage-open-cb-"><code>storage.open(cb)</code></h4>
+<p>This API is <em>optional</em>. If you provide this hypercore will call <code>.open</code> and wait for the callback to be called before calling any other methods.</p>
+<h4 id="-storage-read-offset-length-cb-"><code>storage.read(offset, length, cb)</code></h4>
+<p>This API is <em>required</em>. Hypercore calls this when it wants to read data. You should return a buffer with length <code>length</code> that way read at the corresponding offset. If you cannot read this buffer call the callback with an error.</p>
+<h4 id="-storage-write-offset-buffer-cb-"><code>storage.write(offset, buffer, cb)</code></h4>
+<p>This API is <em>required</em>. Hypercore calls this when it wants to write data. You should write the buffer at the corresponding offset and call the callback afterwards. If there was an error writing you should call the callback with that error.</p>
+<h4 id="-storage-close-cb-"><code>storage.close(cb)</code></h4>
+<p>This API is <em>optional</em>. Hypercore will call this method when the feed is closing.</p>
+<h2 id="license">License</h2>
+<p>MIT</p>
+</div>
+  </div>
+      </div>
+    </div>
+  </div>
+<script src="/bundle.js"></script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Dat World</title>
+<meta charset="utf-8">
+
+<link rel="stylesheet" href="/bundle.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<div id="choo-root" class="minidocs">
+    <div class="_68ad6959 minidocs-sidebar">
+    <div class="minidocs-header">
+      <h1><a href="/"><img src="/dat-data-logo.svg" alt="Dat World" class="minidocs-logo" /></a></h1>
+    </div>
+    <div class="_df8df972 minidocs-contents">
+    <button class="minidocs-menu-toggle">Menu</button>
+    <div class="minidocs-menu menu-closed menu-small">
+      <div class="minidocs-menu-wrapper">
+        <div class="h1">Welcome</div><div><a href="/awesome-dat" class="content-link ">Awesome Dat</a></div><div class="h1">For the users</div><div><a href="/dat" class="content-link ">maxogden/dat</a></div><div><a href="/dat-desktop" class="content-link ">juliangruber/dat-desktop</a></div><div class="h1">Protocol &amp; Network</div><div><a href="/docs" class="content-link ">datproject/docs</a></div><div><a href="/hypercore" class="content-link ">mafintosh/hypercore</a></div><div><a href="/hypercore-protocol" class="content-link active">mafintosh/hypercore-protocol</a></div><div><a href="/hyperdrive" class="content-link ">mafintosh/hyperdrive</a></div><div><a href="/hyperdrive-archive-swarm" class="content-link ">karissa/hyperdrive-archive-swarm</a></div><div><a href="/hyperdrive-ui" class="content-link ">karissa/hyperdrive-ui</a></div><div class="h1">Infrastructure</div><div><a href="/website" class="content-link ">datproject/website</a></div><div class="h1">Built with dat</div><div><a href="/jawn" class="content-link ">CfABrigadePhiladelphia/jawn</a></div>
+      </div>
+    </div>
+  </div>
+  </div>
+    <div class="_6781b8a1 minidocs-main">
+      <div class="markdown-body">
+        <div class="_d706bf45 minidocs-content">
+    
+    
+    <div><h1 id="hypercore-protocol">hypercore-protocol</h1>
+<p>Stream that implements the <a href="https://github.com/mafintosh/hypercore">hypercore</a> protocol</p>
+<pre><code>npm <span class="hljs-keyword">install</span> hypercore-protocol
+</code></pre><p><a href="https://travis-ci.org/mafintosh/hypercore-protocol"><img src="https://travis-ci.org/mafintosh/hypercore-protocol.svg?branch=master" alt="build status"></a></p>
+<h2 id="usage">Usage</h2>
+<pre><code class="lang-js"><span class="hljs-keyword">var</span> protocol = <span class="hljs-built_in">require</span>(<span class="hljs-string">'hypercore-protocol'</span>)
+
+<span class="hljs-keyword">var</span> p = protocol()
+
+<span class="hljs-comment">// open a channel specified by a 32 byte key</span>
+<span class="hljs-keyword">var</span> channel = p.open(Buffer(<span class="hljs-string">'deadbeefdeadbeefdeadbeefdeadbeef'</span>))
+
+channel.request({block: <span class="hljs-number">42</span>})
+channel.on(<span class="hljs-string">'data'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">message</span>) </span>{
+  <span class="hljs-built_in">console</span>.log(message) <span class="hljs-comment">// contains message.block and message.value</span>
+})
+
+stream.pipe(anotherStream).pipe(stream)
+</code></pre>
+<h2 id="api">API</h2>
+<h4 id="-var-k-protocol-parsediscoverykey-buf-"><code>var k = protocol.parseDiscoveryKey(buf)</code></h4>
+<p>Parse the discovery key encoded in <code>buf</code> which is the first varint message taken from a hypercore feed stream.</p>
+<h4 id="-var-p-protocol-options-onopen-"><code>var p = protocol([options], [onopen])</code></h4>
+<p>Create a new protocol instance. The returned object is a duplex stream
+that you should pipe to another protocol instance over a stream based transport</p>
+<p>If the remote peer joins a channel you haven&#39;t opened, hypercore will call an optional <code>onopen</code>
+method if you specify it with the discovery key for that channel.</p>
+<pre><code class="lang-js"><span class="hljs-keyword">var</span> p = protocol(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">discoveryKey</span>) </span>{
+  <span class="hljs-comment">// remote peer joined discoveryKey but you haven't</span>
+  <span class="hljs-comment">// you can open the channel now if you want to join the channel</span>
+
+  <span class="hljs-comment">// open with corresponding key to join</span>
+  <span class="hljs-keyword">var</span> channel = p.open(Buffer(<span class="hljs-string">'deadbeefdeadbeefdeadbeefdeadbeef'</span>))
+})
+</code></pre>
+<p>See below for more information about channels, keys, and discovery keys.
+Other options include:</p>
+<pre><code class="lang-js">{
+  id: optionalPeerId, <span class="hljs-comment">// you can use this to detect if you connect to yourself</span>
+  encrypt: <span class="hljs-literal">true</span> <span class="hljs-comment">// set to false to disable encryption for debugging purposes</span>
+}
+</code></pre>
+<p>If you don&#39;t specify a peer id a random 32 byte will be used.
+You can access the peer id using <code>p.id</code> and the remote peer id using <code>p.remoteId</code>.</p>
+<h4 id="-var-channel-p-open-key-options-"><code>var channel = p.open(key, [options])</code></h4>
+<p>Open a stream channel. A channel uses the <a href="https://github.com/mafintosh/sodium-prebuilt">sodium</a> module to encrypt all messages using the key you specify. The discovery key for the channel is send unencrypted together with a random 24 byte nonce. If you do not specify a discovery key in the options map, an HMAC of the string <code>hypercore</code> using the key as the password will be used.</p>
+<h4 id="-p-on-handshake-"><code>p.on(&#39;handshake&#39;)</code></h4>
+<p>Emitted when a protocol handshake has been received. Afterwards you can check <code>.remoteId</code> to get the remote peer id.</p>
+<h4 id="-p-settimeout-ms-ontimeout-"><code>p.setTimeout(ms, [ontimeout])</code></h4>
+<p>Will call the timeout function if the remote peer hasn&#39;t send any messages within <code>ms</code>. Will also send a heartbeat message to the other peer if you&#39;ve been inactive for <code>ms / 2</code></p>
+<h2 id="channel-api">Channel API</h2>
+<h4 id="-channel-end-"><code>channel.end()</code></h4>
+<p>Ends a channel</p>
+<h4 id="-channel-on-end-"><code>channel.on(&#39;end&#39;)</code></h4>
+<p>Emitted when a channel is ended, either by you or the remote peer.
+No other events will be emitted after this.</p>
+<h4 id="-channel-request-message-"><code>channel.request(message)</code></h4>
+<p>Send a request message. See the protobuf schema or more information</p>
+<h4 id="-channel-on-request-message-"><code>channel.on(&#39;request&#39;, message)</code></h4>
+<p>Emitted when a request message is received</p>
+<h4 id="-channel-data-message-"><code>channel.data(message)</code></h4>
+<p>Send a data message. See the protobuf schema or more information</p>
+<h4 id="-channel-on-data-message-"><code>channel.on(&#39;data&#39;, message)</code></h4>
+<p>Emitted when a data message is received</p>
+<h4 id="-channel-cancel-message-"><code>channel.cancel(message)</code></h4>
+<p>Send a cancel message. See the protobuf schema or more information</p>
+<h4 id="-channel-on-cancel-message-"><code>channel.on(&#39;cancel&#39;, message)</code></h4>
+<p>Emitted when a cancel message is received</p>
+<h4 id="-channel-have-message-"><code>channel.have(message)</code></h4>
+<p>Send a have message. See the protobuf schema or more information</p>
+<h4 id="-channel-on-have-message-"><code>channel.on(&#39;have&#39;, message)</code></h4>
+<p>Emitted when a have message is received</p>
+<h4 id="-channel-want-message-"><code>channel.want(message)</code></h4>
+<p>Send a want message. See the protobuf schema or more information</p>
+<h4 id="-channel-on-want-message-"><code>channel.on(&#39;want&#39;, message)</code></h4>
+<p>Emitted when a want message is received</p>
+<h4 id="-channel-resume-"><code>channel.resume()</code></h4>
+<p>Send a resume signal</p>
+<h4 id="-channel-on-resume-"><code>channel.on(&#39;resume&#39;)</code></h4>
+<p>Emitted when a resume signal is received</p>
+<h4 id="-channel-pause-"><code>channel.pause()</code></h4>
+<p>Send a pause signal</p>
+<h4 id="-channel-on-pause-"><code>channel.on(&#39;pause&#39;)</code></h4>
+<p>Emitted when a pause signal is received</p>
+<p>You can always check the paused state by accessing <code>.remotePaused</code> and <code>.amPaused</code>
+to see wheather or not the remote is pausing us or we are pausing the remote.</p>
+<h2 id="extension-api">Extension API</h2>
+<h4 id="-protocol-protocol-use-extensionname-"><code>protocol = protocol.use(extensionName)</code></h4>
+<p>Use an extension specified by the string name you pass in. Returns a new prototype</p>
+<p>Will create a new method on all your channel objects that has the same name as the extension and emit an event with the same name when an extension message is received</p>
+<pre><code class="lang-js">protocol = protocol.use(<span class="hljs-string">'ping'</span>)
+
+<span class="hljs-keyword">var</span> p = protocol()
+<span class="hljs-keyword">var</span> channel = p.open(someKey)
+
+channel.on(<span class="hljs-string">'handshake'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+  channel.on(<span class="hljs-string">'ping'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">message</span>) </span>{
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'received ping message'</span>, message)
+  })
+
+  channel.ping(Buffer(<span class="hljs-string">'this is a ping message!'</span>))
+})
+</code></pre>
+<p>Per default all messages are buffers. If you want to encode/decode your messages you can specify an <a href="https://github.com/mafintosh/abstract-encoding">abstract-encoding</a> compliant encoder as well</p>
+<pre><code class="lang-js">protocol = protocol.use({
+  ping: someEncoder
+})
+</code></pre>
+<h4 id="-var-bool-p-remotesupports-extensionname-"><code>var bool = p.remoteSupports(extensionName)</code></h4>
+<p>After the protocol instance emits <code>handshake</code> you can call this method to check
+if the remote peer also supports one of your extensions.</p>
+<h2 id="license">License</h2>
+<p>MIT</p>
+</div>
+  </div>
+      </div>
+    </div>
+  </div>
+<script src="/bundle.js"></script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Dat World</title>
+<meta charset="utf-8">
+
+<link rel="stylesheet" href="/bundle.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<div id="choo-root" class="minidocs">
+    <div class="_68ad6959 minidocs-sidebar">
+    <div class="minidocs-header">
+      <h1><a href="/"><img src="/dat-data-logo.svg" alt="Dat World" class="minidocs-logo" /></a></h1>
+    </div>
+    <div class="_df8df972 minidocs-contents">
+    <button class="minidocs-menu-toggle">Menu</button>
+    <div class="minidocs-menu menu-closed menu-small">
+      <div class="minidocs-menu-wrapper">
+        <div class="h1">Welcome</div><div><a href="/awesome-dat" class="content-link ">Awesome Dat</a></div><div class="h1">For the users</div><div><a href="/dat" class="content-link ">maxogden/dat</a></div><div><a href="/dat-desktop" class="content-link ">juliangruber/dat-desktop</a></div><div class="h1">Protocol &amp; Network</div><div><a href="/docs" class="content-link ">datproject/docs</a></div><div><a href="/hypercore" class="content-link ">mafintosh/hypercore</a></div><div><a href="/hypercore-protocol" class="content-link ">mafintosh/hypercore-protocol</a></div><div><a href="/hyperdrive" class="content-link active">mafintosh/hyperdrive</a></div><div><a href="/hyperdrive-archive-swarm" class="content-link ">karissa/hyperdrive-archive-swarm</a></div><div><a href="/hyperdrive-ui" class="content-link ">karissa/hyperdrive-ui</a></div><div class="h1">Infrastructure</div><div><a href="/website" class="content-link ">datproject/website</a></div><div class="h1">Built with dat</div><div><a href="/jawn" class="content-link ">CfABrigadePhiladelphia/jawn</a></div>
+      </div>
+    </div>
+  </div>
+  </div>
+    <div class="_6781b8a1 minidocs-main">
+      <div class="markdown-body">
+        <div class="_d706bf45 minidocs-content">
+    
+    
+    <div><h1 id="hyperdrive">hyperdrive</h1>
+<p>A file sharing network based on <a href="https://github.com/maxogden/rabin">rabin</a> file chunking and <a href="https://github.com/mafintosh/hypercore">append only feeds of data verified by merkle trees</a>.</p>
+<pre><code>npm <span class="hljs-keyword">install</span> hyperdrive
+</code></pre><p><a href="http://travis-ci.org/mafintosh/hyperdrive"><img src="http://img.shields.io/travis/mafintosh/hyperdrive.svg?style=flat" alt="build status"></a></p>
+<p>If you are interested in learning how hyperdrive works on a technical level a specification is available in the <a href="https://github.com/datproject/docs/blob/master/docs/hyperdrive_spec.md">Dat docs repo</a></p>
+<h2 id="usage">Usage</h2>
+<p>First create a new feed and share it</p>
+<pre><code class="lang-js"><span class="hljs-keyword">var</span> hyperdrive = <span class="hljs-built_in">require</span>(<span class="hljs-string">'hyperdrive'</span>)
+<span class="hljs-keyword">var</span> level = <span class="hljs-built_in">require</span>(<span class="hljs-string">'level'</span>)
+<span class="hljs-keyword">var</span> swarm = <span class="hljs-built_in">require</span>(<span class="hljs-string">'discovery-swarm'</span>)()
+
+<span class="hljs-keyword">var</span> db = level(<span class="hljs-string">'./hyperdrive.db'</span>)
+<span class="hljs-keyword">var</span> drive = hyperdrive(db)
+
+<span class="hljs-keyword">var</span> archive = drive.createArchive()
+<span class="hljs-keyword">var</span> ws = archive.createFileWriteStream(<span class="hljs-string">'hello.txt'</span>) <span class="hljs-comment">// add hello.txt</span>
+
+ws.write(<span class="hljs-string">'hello'</span>)
+ws.write(<span class="hljs-string">'world'</span>)
+ws.end()
+
+<span class="hljs-keyword">var</span> link = archive.key.toString(<span class="hljs-string">'hex'</span>)
+<span class="hljs-built_in">console</span>.log(link, <span class="hljs-string">'&lt;-- this is your hyperdrive link'</span>)
+
+<span class="hljs-comment">// the archive is now ready for sharing.</span>
+<span class="hljs-comment">// we can use swarm to replicate it to other peers</span>
+swarm.listen()
+swarm.join(<span class="hljs-keyword">new</span> Buffer(link, <span class="hljs-string">'hex'</span>))
+swarm.on(<span class="hljs-string">'connection'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">connection</span>) </span>{
+  connection.pipe(archive.replicate()).pipe(connection)
+})
+</code></pre>
+<p>Then we can access the content from another process with the following code</p>
+<pre><code class="lang-js"><span class="hljs-keyword">var</span> swarm = <span class="hljs-built_in">require</span>(<span class="hljs-string">'discovery-swarm'</span>)()
+<span class="hljs-keyword">var</span> hyperdrive = <span class="hljs-built_in">require</span>(<span class="hljs-string">'hyperdrive'</span>)
+<span class="hljs-keyword">var</span> level = <span class="hljs-built_in">require</span>(<span class="hljs-string">'level'</span>)
+
+<span class="hljs-keyword">var</span> db = level(<span class="hljs-string">'./another-hyperdrive.db'</span>)
+<span class="hljs-keyword">var</span> drive = hyperdrive(db)
+
+<span class="hljs-keyword">var</span> link = <span class="hljs-keyword">new</span> Buffer(<span class="hljs-string">'your-hyperdrive-link-from-the-above-example'</span>, <span class="hljs-string">'hex'</span>)
+<span class="hljs-keyword">var</span> archive = drive.createArchive(link)
+
+swarm.listen()
+swarm.join(link)
+swarm.on(<span class="hljs-string">'connection'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">connection</span>) </span>{
+  connection.pipe(archive.replicate()).pipe(connection)
+  archive.get(<span class="hljs-number">0</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">err, entry</span>) </span>{ <span class="hljs-comment">// get the first file entry</span>
+    <span class="hljs-built_in">console</span>.log(entry) <span class="hljs-comment">// prints {name: 'hello.txt', ...}</span>
+    <span class="hljs-keyword">var</span> stream = archive.createFileReadStream(entry)
+    stream.on(<span class="hljs-string">'data'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">data</span>) </span>{
+      <span class="hljs-built_in">console</span>.log(data) <span class="hljs-comment">// &lt;-- file data</span>
+    })
+    stream.on(<span class="hljs-string">'end'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'no more data'</span>)
+    })
+  })
+})
+</code></pre>
+<p>If you want to write/read files to the file system provide a storage driver as the file option</p>
+<pre><code class="lang-js"><span class="hljs-keyword">var</span> raf = <span class="hljs-built_in">require</span>(<span class="hljs-string">'random-access-file'</span>) <span class="hljs-comment">// a storage driver that writes to the file system</span>
+<span class="hljs-keyword">var</span> archive = drive.createArchive({
+  file: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">name</span>) </span>{
+    <span class="hljs-keyword">return</span> raf(<span class="hljs-string">'my-download-folder/'</span> + name)
+  }
+})
+</code></pre>
+<h2 id="api">API</h2>
+<h4 id="-var-drive-hyperdrive-db-"><code>var drive = hyperdrive(db)</code></h4>
+<p>Create a new hyperdrive instance. db should be a <a href="https://github.com/level/levelup">levelup</a> instance.</p>
+<h4 id="-var-archive-drive-createarchive-key-options-"><code>var archive = drive.createArchive([key], [options])</code></h4>
+<p>Creates an archive instance. If you want to download/upload an existing archive provide the archive key
+as the first argument. Options include</p>
+<pre><code class="lang-js">{
+  live: <span class="hljs-literal">false</span>, <span class="hljs-comment">// set this to share the archive without finalizing it</span>
+  sparse: <span class="hljs-literal">false</span>, <span class="hljs-comment">// set this to only download the pieces of the feed you are requesting / prioritizing</span>
+  file: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">name</span>) </span>{
+    <span class="hljs-comment">// set this to determine how file data is stored.</span>
+    <span class="hljs-comment">// the storage instance should implement the hypercore storage api</span>
+    <span class="hljs-comment">// https://github.com/mafintosh/hypercore#storage-api</span>
+    <span class="hljs-keyword">return</span> someStorageInstance
+  }
+}
+</code></pre>
+<p>If you do not provide the file option all file data is stored in the leveldb.</p>
+<h4 id="-archive-key-"><code>archive.key</code></h4>
+<p>A buffer that verifies the archive content. In live mode this is a 32 byte public key.
+Otherwise it is a 32 byte hash.</p>
+<h4 id="-archive-live-"><code>archive.live</code></h4>
+<p>Boolean whether archive is live. <code>true</code> by default. Note that its only populated after archive.open(cb) has been fired.</p>
+<h4 id="-archive-append-entry-callback-"><code>archive.append(entry, callback)</code></h4>
+<p>Append an entry to the archive. Only possible if this is an live archive you originally created
+or an unfinalized archive.</p>
+<p>If you set the file option in the archive constructor you can use this method to append an already
+existing file to the archive.</p>
+<pre><code class="lang-js"><span class="hljs-keyword">var</span> archive = drive.createArchive({
+  file: <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">name</span>) </span>{
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'returning storage for'</span>, name)
+    <span class="hljs-keyword">return</span> raf(name)
+  }
+})
+
+archive.append(<span class="hljs-string">'hello.txt'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'hello.txt was read and appended'</span>)
+})
+</code></pre>
+<h4 id="-archive-finalize-callback-"><code>archive.finalize([callback])</code></h4>
+<p>Finalize the archive. You need to do this before sharing it if the archive is not live (it is live per default).</p>
+<h4 id="-archive-get-index-callback-"><code>archive.get(index, callback)</code></h4>
+<p>Reads an entry from the archive.</p>
+<h4 id="-archive-download-index-callback-"><code>archive.download(index, callback)</code></h4>
+<p>Fully downloads a file / entry from the archive and calls the callback afterwards.</p>
+<h4 id="-archive-close-callback-"><code>archive.close([callback])</code></h4>
+<p>Closes and releases all resources used by the archive. Call this when you are done using it.</p>
+<h4 id="-archive-on-download-data-"><code>archive.on(&#39;download&#39;, data)</code></h4>
+<p>Emitted every time a piece of data is downloaded</p>
+<h4 id="-archive-on-upload-data-"><code>archive.on(&#39;upload&#39;, data)</code></h4>
+<p>Emitted every time a piece of data is uploaded</p>
+<h4 id="-var-rs-archive-list-opts-cb-"><code>var rs = archive.list(opts={}, cb)</code></h4>
+<p>Returns a readable stream of all entries in the archive.</p>
+<ul>
+<li><code>opts.offset</code> - start streaming from this offset (default: 0)</li>
+<li><code>opts.live</code> - keep the stream open as new updates arrive (default: false)</li>
+</ul>
+<p>You can collect the results of the stream with <code>cb(err, entries)</code>.</p>
+<h4 id="-var-rs-archive-createfilereadstream-entry-options-"><code>var rs = archive.createFileReadStream(entry, [options])</code></h4>
+<p>Returns a readable stream of the file content of an file in the archive.</p>
+<p>Options include:</p>
+<pre><code class="lang-js">{
+  start: startOffset, <span class="hljs-comment">// defaults to 0</span>
+  end: endOffset <span class="hljs-comment">// defaults to file.length</span>
+}
+</code></pre>
+<h4 id="-var-ws-archive-createfilewritestream-entry-"><code>var ws = archive.createFileWriteStream(entry)</code></h4>
+<p>Returns a writable stream that writes a new file to the archive. Only possible if the archive is live and you own it
+or if the archive is not finalized.</p>
+<h4 id="-var-cursor-archive-createbytecursor-entry-options-"><code>var cursor = archive.createByteCursor(entry, [options])</code></h4>
+<p>Creates a cursor that can seek and traverse parts of the file.</p>
+<pre><code class="lang-js"><span class="hljs-keyword">var</span> cursor = archive.createByteCursor(<span class="hljs-string">'hello.txt'</span>)
+
+<span class="hljs-comment">// seek to byte offset 10000 and read the rest.</span>
+cursor.seek(<span class="hljs-number">10000</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">err</span>) </span>{
+  <span class="hljs-keyword">if</span> (err) <span class="hljs-keyword">throw</span> err
+  cursor.next(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">loop</span> (<span class="hljs-params">err, data</span>) </span>{
+    <span class="hljs-keyword">if</span> (err) <span class="hljs-keyword">throw</span> err
+    <span class="hljs-keyword">if</span> (!data) <span class="hljs-keyword">return</span> <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'no more data'</span>)
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'cursor.position is '</span> + cursor.position)
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'read'</span>, data.length, <span class="hljs-string">'bytes'</span>)
+    cursor.next(loop)
+  })
+})
+</code></pre>
+<p>Options include</p>
+<pre><code class="lang-js">{
+  start: startOffset, <span class="hljs-comment">// defaults to 0</span>
+  end: endOffset <span class="hljs-comment">// defaults to file.length</span>
+}
+</code></pre>
+<h4 id="-var-stream-archive-replicate-"><code>var stream = archive.replicate()</code></h4>
+<p>Pipe this stream together with another peer that is interested in the same archive to replicate the content.</p>
+<h2 id="license">License</h2>
+<p>MIT</p>
+</div>
+  </div>
+      </div>
+    </div>
+  </div>
+<script src="/bundle.js"></script>
+</body>
+</html>
