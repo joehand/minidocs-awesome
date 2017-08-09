@@ -1,4 +1,5 @@
 @import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700);
+@import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700);
 body #choo-root.minidocs {
   font-family: 'Source Sans Pro', 'Helvetica Neue', 'Lucida Grande', Arial, sans-serif;
   line-height: 1.5;
@@ -67,3 +68,43 @@ body #choo-root.minidocs {
       padding-left: .65rem;
       border-left-color: #24943A;
       background-color: #FFF; }
+
+#choo-root.minidocs {
+  font-family: 'Source Sans Pro', 'Helvetica Neue', 'Lucida Grande', Arial, sans-serif;
+  line-height: 1.5;
+  color: #293648;
+  /* header */ }
+  #choo-root.minidocs .minidocs-sidebar {
+    background-color: #E9EBEC; }
+  #choo-root.minidocs .minidocs-menu .h1::before {
+    display: none; }
+  #choo-root.minidocs .minidocs-menu .content-link {
+    transition-property: background-color, color, border-color, padding-left;
+    color: #505F6D; }
+    #choo-root.minidocs .minidocs-menu .content-link:hover, #choo-root.minidocs .minidocs-menu .content-link:focus {
+      color: #293648;
+      border-left-color: transparent;
+      padding-left: .65rem;
+      background-color: rgba(0, 0, 0, 0.05); }
+    #choo-root.minidocs .minidocs-menu .content-link.active {
+      padding-left: .65rem;
+      border-left-color: #199E33;
+      background-color: #FFF; }
+  #choo-root.minidocs .minidocs-header {
+    background-color: #293648; }
+  #choo-root.minidocs .minidocs-header-link {
+    font-size: .875rem;
+    letter-spacing: 0.05em;
+    color: #C3C9CD; }
+    #choo-root.minidocs .minidocs-header-link:hover, #choo-root.minidocs .minidocs-header-link:focus {
+      color: #FFFFFF;
+      text-decoration: none; }
+  #choo-root.minidocs .minidocs-header-logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #E9EBEC;
+    letter-spacing: .025em; }
+    #choo-root.minidocs .minidocs-header-logo img {
+      transition: transform .5s ease-in-out; }
+    #choo-root.minidocs .minidocs-header-logo:hover img, #choo-root.minidocs .minidocs-header-logo:focus img {
+      transform: rotate(360deg); }

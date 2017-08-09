@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "budo --dir dist --pushstate",
-    "build:deploy": "npm run build:css && minidocs docs -c docs/contents.json -i awesome-dat -o dist -l ./node_modules/dat-design/public/img/dat-data-logo.svg -t 'Dat World' -s assets/styles.css --full-html",
-    "build": "npm run build:css && minidocs docs -c docs/contents.json -i awesome-dat -o dist -l ./node_modules/dat-design/public/img/dat-data-logo.svg -t 'Dat World' -s assets/styles.css --pushstate",
+    "build:deploy": "npm run build:css && minidocs docs -c docs/contents.json -i awesome-dat -o dist -l ./node_modules/dat-design/public/img/dat-data-logo.svg -t 'Awesome Dat' -s assets/styles.css --full-html",
+    "build": "npm run build:css && minidocs docs -c docs/contents.json -i awesome-dat -o dist -l ./node_modules/dat-design/public/img/dat-data-logo.svg -t 'Awesome Dat' -s assets/styles.css --pushstate",
     "build:css": "node-sass --importer node_modules/node-sass-magic-importer assets/styles.scss assets/styles.css",
     "update": "npm run update:list && npm run update:build",
-    "update:list": "echo clkao/awesome-dat | ecosystem-docs sync && echo clkao/awesome-dat | ecosystem-docs read | node list.js",
+    "update:list": "echo datproject/awesome-dat | ecosystem-docs sync && echo datproject/awesome-dat | ecosystem-docs read | node list.js",
     "update:build": "cat repos.txt | ecosystem-docs sync && cat repos.txt | ecosystem-docs read | node build.js",
     "deploy": "npm run build:deploy && echo awesome.datproject.org > dist/CNAME && gh-pages -d dist",
     "test": "standard && tape test/*.js | tap-spec"
@@ -17,17 +17,19 @@
   "author": "Joe Hand <joe@hand.email> (https://joeahand.com/)",
   "license": "MIT",
   "dependencies": {
-    "dat-design": "^1.2.11",
+    "dat-design": "^1.4.2",
     "ecosystem-docs": "^1.1.1",
     "gh-pages": "^0.11.0",
-    "minidocs": "^4.0.6",
+    "minidocs": "github:datproject/minidocs#dat-tachyons",
     "ndjson": "^1.4.3",
     "node-sass": "^3.8.0",
     "node-sass-magic-importer": "^0.1.4",
     "pump": "^1.0.1",
     "through2": "^2.0.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "budo": "^10.0.4"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/joehand/minidocs-awesome.git"

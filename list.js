@@ -6,7 +6,7 @@ var through = require('through2')
 var toc = {
   'Welcome': {'Awesome Dat': 'awesome-dat.md'}
 }
-var repoList = ['clkao/awesome-dat']
+var repoList = ['datproject/awesome-dat']
 
 pump(process.stdin, ndjson.parse(), through.obj(function (data, enc, next) {
   var matches = data.readme.split(/\n#{2,}(.*)\n/)
@@ -15,7 +15,7 @@ pump(process.stdin, ndjson.parse(), through.obj(function (data, enc, next) {
     if (i % 2) {
       if (i === matches.length) return
       var tocRepos = {}
-      var repos = matches[i+1].match(/github.com\/([a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+)/g)
+      var repos = matches[i+1].match(/github.com\/([a-zA-Z0-9_-]+\/[a-zA-Z0-9_\-\\.]+)/g)
       if (!repos) return
 
       repos = Array.from(new Set(repos))
